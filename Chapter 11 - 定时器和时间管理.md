@@ -12,23 +12,21 @@ Nanjing, Jiangsu, China
 
 ## 11.1 内核中的时间概念
 
-内核必须在硬件的帮助下才能管理和计算时间
+内核必须在硬件的帮助下才能管理和计算时间。
 
-* 系统定时器 - 以设定好的频率自行触发
-* 内核知道连续两次时钟中断的间隔 - 节拍 (tick)
+- 系统定时器：以设定好的频率自行触发
+- 内核知道连续两次时钟中断的间隔：节拍 (tick)
 
 内核通过控制时钟中断，维护实际时间。在时钟中断处理程序中，要进行的工作有：
 
-* 更新系统运行时间
-* 更新实际时间
-* 均衡调度程序中各 CPU 的运行队列
-* 检查当前进程是否用尽了自己的时间片 - 如用尽，则重新调度
-* 运行超时的定时器
-* 更新资源消耗和 CPU 时间的统计值
+- 更新系统运行时间
+- 更新实际时间
+- 均衡调度程序中各 CPU 的运行队列
+- 检查当前进程是否用尽了自己的时间片 - 如用尽，则重新调度
+- 运行超时的定时器
+- 更新资源消耗和 CPU 时间的统计值
 
 在每次的时钟中断处理程序中都要被处理。
-
----
 
 ## 11.2 节拍率：HZ
 
@@ -38,34 +36,25 @@ Nanjing, Jiangsu, China
 
 提高节拍率 → 时钟中断产生得更加频繁 → 中断处理程序会更频繁地执行
 
-* 更高的时钟中断解析度
-* 提高了时间驱动事件的准确度
-
-若某个时刻随机触发定时器，可能在任何时刻超时。只有在时钟中断到来时才可以执行它。
+更高的时钟中断解析度提高了时间驱动事件的准确度。若某个时刻随机触发定时器，可能在任何时刻超时。只有在时钟中断到来时才可以执行它。
 
 ### 11.2.2 高 HZ 的优势
 
-* 内核定时器能以更高的频率和准确率运行
-* 依赖定时值执行的系统调用，能以更高的精度运行 - `poll()`、`select()`
-* 减少等待时钟中断到来的时间，提升系统性能
-* 对资源消耗的测量会有更精细的解析度
-* 提高进程抢占的准确度
+- 内核定时器能以更高的频率和准确率运行
+- 依赖定时值执行的系统调用，能以更高的精度运行 - `poll()`、`select()`
+- 减少等待时钟中断到来的时间，提升系统性能
+- 对资源消耗的测量会有更精细的解析度
+- 提高进程抢占的准确度
 
 ### 11.2.3 高 HZ 的劣势
 
 CPU 必须花时间来执行时钟中断处理程序 → 系统负担加重。频繁打乱 CPU 的 cache，并增加耗电。但随着现代硬件能力的提升，增加的负担不会对系统的性能有较大影响。
 
 > 无节拍的 OS？动态调度时钟中断，不以固定的频率触发时钟中断，而是按需动态调度和重新设置，省电。
->
-
----
 
 ## 11.3 jiffies
 
-全局变量 `jiffies` 用于记录自系统启动以来产生的节拍总数
-
-* 启动时，内核将该变量初始化为 0
-* 每次时钟中断处理程序都会增加该变量的值
+全局变量 `jiffies` 用于记录自系统启动以来产生的节拍总数。启动时，内核将该变量初始化为 0。每次时钟中断处理程序都会增加该变量的值。
 
 ### 11.3.1 jiffies 的内部表示
 
@@ -108,8 +97,6 @@ if (timeout > jiffies) {
 
 ### 11.3.3 用户空间和 HZ
 
----
-
 ## 11.4 硬时钟和定时器
 
 ### 11.4.1 实时时钟
@@ -122,30 +109,28 @@ if (timeout > jiffies) {
 
 > 8259 chip???
 
----
-
 ## 11.5 时钟中断处理程序
 
 分为两个部分：
 
-* 与体系结构相关
-* 与体系结构无关
+- 与体系结构相关
+- 与体系结构无关
 
 与体系结构相关的部分，作为 **系统定时器** 的 **中断处理程序**，注册到内核中：
 
-* 获得 `xtime_lock` 锁，对系统时间进行维护，更新 RTC
-* 调用体系结构无关的时钟例程 `tick_periodic()`
-* 释放 `xtime_lock` 锁
-* 退出
+- 获得 `xtime_lock` 锁，对系统时间进行维护，更新 RTC
+- 调用体系结构无关的时钟例程 `tick_periodic()`
+- 释放 `xtime_lock` 锁
+- 退出
 
 体系结构无关的例程：
 
-* 累加 `jiffies_64` 变量
-* 更新资源消耗的统计值 (当前进程消耗的系统时间和用户时间)
-* 执行已经到期的动态定时器
-* 执行进程调度
-* 更新墙上时间
-* 计算平均负载值
+- 累加 `jiffies_64` 变量
+- 更新资源消耗的统计值 (当前进程消耗的系统时间和用户时间)
+- 执行已经到期的动态定时器
+- 执行进程调度
+- 更新墙上时间
+- 计算平均负载值
 
 ```c
 static void tick_periodic(int cpu)
@@ -156,7 +141,7 @@ static void tick_periodic(int cpu)
         do_time(1);
         write_sequnlock(&xtime_lock);
     }
-    
+
     update_process_times(user_mode(get_irq_regs()));
     profile_tick(CPU_PROFILING);
 }
@@ -196,7 +181,7 @@ void account_process_tick(struct task_struct *p, int user_tick)
 {
     cputime_t one_jiffy_scaled = cputime_to_scaled(cputime_one_jiffy);
     struct rq *rq = this_rq();
-    
+
     if (user_tick)
         account_user_time(p, cputime_one_jiffy, one_jiffy_scaled);
     else if ((p != rq->idle) || (irq_count() != HARDIRQ_OFFSET))
@@ -208,11 +193,9 @@ void account_process_tick(struct task_struct *p, int user_tick)
 
 内核对进程进行时间计数时，是根据中断发生时 CPU 所处的模式进行分类统计的。把这一个节拍全部算给中断发生时的 CPU 模式了 - 实际上，进程在一个节拍期间，可能多次进出内核态，但没有更精密的统计算法了。
 
----
-
 ## 11.6 实际时间
 
-当前实际时间，即墙上时间
+当前实际时间，即墙上时间。
 
 ```c
 struct timespec xtime;
@@ -246,18 +229,16 @@ asmlinkage long sys_ettimeofday(struct timeval *tv, struct timezone *tz)
 
 内核主要会在文件系统中，修改各种时间戳时，使用 `xtime`。
 
----
-
 ## 11.7 定时器
 
 也叫 **动态定时器** 或 **内核定时器**。使用简单：
 
-* 初始化
-* 设置一个超时时间
-* 指定超时后执行的函数
-* 激活
+- 初始化
+- 设置一个超时时间
+- 指定超时后执行的函数
+- 激活
 
-定时器 **不周期执行**，超时后自动撤销 (动态定时器)。
+定时器 **不周期执行**，超时后自动撤销（动态定时器）。
 
 ### 11.7.1 使用定时器
 
@@ -290,13 +271,13 @@ void my_timer_function(unsigned long data);
 
 内核可以保证不会在超时时间到期前运行处理函数，但有可能延误定时器处理程序的执行。所以不能用定时器来实现任何 **硬实时任务**。
 
-更改定时器 (顺带会激活)：
+更改定时器（顺带会激活）：
 
 ```c
 mod_timer(&my_timer, jiffies + new_delay);
 ```
 
-在定时器超时前停止寄存器 (已超时的定时器会被自动删除)：
+在定时器超时前停止寄存器（已超时的定时器会被自动删除）：
 
 ```c
 del_timer(&my_timer);
@@ -325,14 +306,9 @@ void run_local_timers(void)
 }
 ```
 
-触发的软中断由 `run_timer_softirq()` 函数处理，运行当前 CPU 上所有超时的定时器。内核中，所有的定时器都以链表的形式存放在一起，但寻找超时定时器而遍历整个链表是不明智的。
-
-* 内核按定时器的超时时间划分为 5 组
-* 定时器超时时间接近时，定时器 **随组一起下移**
+触发的软中断由 `run_timer_softirq()` 函数处理，运行当前 CPU 上所有超时的定时器。内核中，所有的定时器都以链表的形式存放在一起，但寻找超时定时器而遍历整个链表是不明智的。内核按定时器的超时时间划分为 5 组，定时器超时时间接近时，定时器 **随组一起下移**。
 
 确保了内核尽可能减少搜索超时定时器所带来的负担。
-
----
 
 ## 11.8 延迟执行
 
@@ -340,8 +316,7 @@ void run_local_timers(void)
 
 ### 11.8.1 忙等待
 
-* 延迟的时间是节拍的整数倍
-* 精确率要求不高时使用
+延迟的时间是节拍的整数倍，精确率要求不高时使用。
 
 ```c
 unsigned long timeout = jiffies + 10;
@@ -359,13 +334,13 @@ while (time_before(jiffies, timeout))
 
 由于 `jiffies` 变量被标记为 `volatile`
 
-* 指示编译器在每次访问变量时，都要重新从主存中获得
-* 而不是通过寄存器中的变量别名访问
+- 指示编译器在每次访问变量时，都要重新从主存中获得
+- 而不是通过寄存器中的变量别名访问
 
 ### 11.8.2 短延迟
 
-* 需要比时钟节拍还短的延时
-* 要求延迟的时间精确
+- 需要比时钟节拍还短的延时
+- 要求延迟的时间精确
 
 发生在和硬件同步时。内核提供了三个 μs、ns 和 ms 级别的延迟函数：
 
@@ -377,9 +352,9 @@ void mdelay(unsigned long msecs);
 
 这些函数依靠 **执行数次循环** 达到延迟效果
 
-* 内核可以知道 CPU 在 1s 内能执行多少次循环
-* 该值存放在 `loops_per_jiffy` 变量中，由内核启动时的 `calibrate_delay()` 计算
-* 可以通过 `/proc/cpuinfo` 读到
+- 内核可以知道 CPU 在 1s 内能执行多少次循环
+- 该值存放在 `loops_per_jiffy` 变量中，由内核启动时的 `calibrate_delay()` 计算
+- 可以通过 `/proc/cpuinfo` 读到
 
 ### 11.8.3 schedule_timeout()
 
@@ -397,7 +372,7 @@ signed long schedule_timeout(signed long timeout)
 {
     timer_t timer;
     unsigned long expire;
-    
+
     switch (timeout) {
         case MAX_SCHEDULE_TIMEOUT:
             // 无限期睡眠
@@ -410,19 +385,19 @@ signed long schedule_timeout(signed long timeout)
                 goto out;
             }
     }
-    
+
     expire = timeout + jiffies;
-    
+
     init_timer(&timer);
     timer.expires = expire;
     timer.data = (unsigned long) current; // 当前进程的地址作为超时处理函数的参数 (用于唤醒)
     timer.function = process_timeout; // 超时处理函数
-    
+
     add_timer(&timer);
     schedule(); // 当前任务已经睡眠，不会被调度到
-    
+
     del_timer_sync(&timer); // 任务被提前唤醒 (收到信号)，则撤销定时器
-    
+
     timeout = expire - jiffies;
 out:
     return timeout < 0 ? 0 : timeout;
@@ -438,11 +413,6 @@ void process_timeout(unsigned long data)
 }
 ```
 
----
-
 ## Summary
 
 比 0.12 的时钟管理复杂了很多啊，主要是还要考虑多 CPU 中存在的竞争条件问题。
-
----
-
